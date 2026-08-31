@@ -137,9 +137,7 @@ tr:hover td{background:#f7faff}
 </head>
 <body>
 
-<!-- ═══════════════════════════════════════════════
-     LOGIN PAGE
-════════════════════════════════════════════════ -->
+<!-- LOGIN PAGE -->
 <div id="pg-login" class="auth-wrap">
   <div class="auth-card">
     <div class="logo-wrap">
@@ -175,9 +173,7 @@ tr:hover td{background:#f7faff}
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     FORGOT PASSWORD
-════════════════════════════════════════════════ -->
+<!-- FORGOT PASSWORD -->
 <div id="pg-forgot" style="display:none" class="auth-wrap">
   <div class="auth-card">
     <div class="logo-wrap">
@@ -215,9 +211,7 @@ tr:hover td{background:#f7faff}
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════
-     MAIN APP
-════════════════════════════════════════════════ -->
+<!-- MAIN APP -->
 <div id="pg-app" class="app" style="display:none">
   <nav class="sidebar">
     <div class="sb-brand">
@@ -254,10 +248,8 @@ tr:hover td{background:#f7faff}
 </div>
 
 <script>
-/* ═══════════════════════════════════════════════════════════
-   BUILT-IN DATABASE WITH PRE-LOADED ADMIN ACCOUNT
-═══════════════════════════════════════════════════════════ */
-let DB = {
+/* ─── INITIAL DEFAULT DATABASE ─── */
+const initialDB = {
   users: [
     {
       'UserID': 'U001',
@@ -372,9 +364,14 @@ let DB = {
   attendance: [
     {'StudentID': 'STU001', 'Student Name': 'Zaid Malik', 'CourseID': 'CS101', 'Date': '2026-08-28', 'Status': 'Present'}
   ],
-  secLogs: [],
-  loaded: true
+  secLogs: []
 };
+
+/* ── LOCAL STORAGE PERSISTENCE SETUP ── */
+let DB = JSON.parse(localStorage.getItem('itech_db')) || initialDB;
+function saveDB() {
+  localStorage.setItem('itech_db', JSON.stringify(DB));
+}
 
 // Permission rules for Account Creation
 const CAN_CREATE = {
@@ -402,14 +399,14 @@ function findUser(email){
   return DB.users.find(u=>(u['Email']||'').toLowerCase()===email.toLowerCase());
 }
 
-/* ─── attempt tracking (in-memory) ─────────────── */
+/* ── Attempt Tracking ── */
 const attempts={};
 function getAtt(email){
   if(!attempts[email]) attempts[email]={count:0,locked:false,lockTime:null};
   return attempts[email];
 }
 
-/* ─── captcha ───────────────────────────────────── */
+/* ── Captcha ── */
 let capAns=0;
 function genCap(){
   const a=Math.floor(Math.random()*12)+1, b=Math.floor(Math.random()*9)+1;
@@ -420,7 +417,7 @@ function genCap(){
   document.getElementById('cap-a').value='';
 }
 
-/* ─── password strength ─────────────────────────── */
+/* ── Password Strength ── */
 function strCheck(p,fillId,lblId){
   let s=0;
   if(p.length>=8)s++; if(/[A-Z]/.test(p))s++; if(/[0-9]/.test(p))s++; if(/[^A-Za-z0-9]/.test(p))s++;
@@ -432,10 +429,10 @@ function strCheck(p,fillId,lblId){
 }
 function isStrong(p){return p.length>=8&&/[A-Z]/.test(p)&&/[0-9]/.test(p)&&/[^A-Za-z0-9]/.test(p);}
 
-/* ─── SESSION ───────────────────────────────────── */
-let SESSION=null;
+/* ── SESSION MANAGEMENT ── */
+let SESSION = JSON.parse(localStorage.getItem('itech_session')) || null;
 
-/* ─── LOGIN ─────────────────────────────────────── */
+/* ── LOGIN ── */
 function doLogin(){
   clearErrs();
   const email=(document.getElementById('l-email').value||'').trim();
@@ -448,7 +445,6 @@ function doLogin(){
   if(isNaN(cap)||cap!==capAns){showErr('er-cap');genCap();ok=false;}
   if(!ok) return;
 
-  // lockout check
   const att=getAtt(email);
   if(att.locked){
     const elapsed=(Date.now()-att.lockTime)/1000;
@@ -475,11 +471,15 @@ function doLogin(){
 
   att.count=0;att.locked=false;
   addLog(email,user['Role'],'Successful Login','Success');
-  SESSION={user,token:'sess_'+Math.random().toString(36).substr(2),time:Date.now()};
+  
+  SESSION = {user, token:'sess_'+Math.random().toString(36).substr(2), time:Date.now()};
+  localStorage.setItem('itech_session', JSON.stringify(SESSION));
+  localStorage.setItem('itech_curSec', 'dashboard');
+  
   loadApp();
 }
 
-/* ─── FORGOT PASSWORD ────────────────────────────── */
+/* ── FORGOT PASSWORD ── */
 let fgtUser=null, fgtOTP='';
 function showForgot(){
   document.getElementById('pg-login').style.display='none';
@@ -511,26 +511,29 @@ function fgtStep2(){
   if(np!==cp){alert('❌ Passwords do not match.');return;}
   
   fgtUser['Password']=np;
+  saveDB();
   addLog(fgtUser['Email'],fgtUser['Role'],'Password Reset via OTP','Success');
   alert('✅ Password reset! Please log in with your new password.');
   showLogin();
 }
 
-/* ─── LOGOUT ─────────────────────────────────────── */
+/* ── LOGOUT ── */
 function doLogout(){
   if(!confirm('Confirm secure logout?'))return;
-  addLog(SESSION.user['Email'],SESSION.user['Role'],'Secure Logout','Success');
+  if(SESSION) addLog(SESSION.user['Email'],SESSION.user['Role'],'Secure Logout','Success');
   SESSION=null;
+  localStorage.removeItem('itech_session');
+  localStorage.removeItem('itech_curSec');
   document.getElementById('pg-app').style.display='none';
   document.getElementById('pg-login').style.display='flex';
   genCap();
 }
 
-/* ─── PERMISSION ─────────────────────────────────── */
+/* ── PERMISSIONS ── */
 function can(p){return SESSION&&(PERMS[SESSION.user['Role']]||[]).includes(p);}
 function canCreate(role){return SESSION&&(CAN_CREATE[SESSION.user['Role']]||[]).includes(role);}
 
-/* ─── LOAD APP ───────────────────────────────────── */
+/* ── LOAD APP ── */
 function loadApp(){
   document.getElementById('pg-login').style.display='none';
   document.getElementById('pg-app').style.display='flex';
@@ -541,11 +544,12 @@ function loadApp(){
   const rm=ROLE_META[u['Role']]||{label:u['Role'],badge:''};
   rb.textContent=rm.label; rb.className='rbadge '+rm.badge;
   buildSidebar();
-  goSection('dashboard');
-  setInterval(()=>{document.getElementById('clk').textContent=new Date().toLocaleString('en-PK');},1000);
+  
+  const targetSec = localStorage.getItem('itech_curSec') || 'dashboard';
+  goSection(targetSec);
 }
 
-/* ─── SIDEBAR ────────────────────────────────────── */
+/* ── SIDEBAR ── */
 const NAV={
   admin:[
     {sec:'Overview'},{i:'📊',l:'Dashboard',k:'dashboard'},
@@ -603,6 +607,8 @@ function goSection(k){
     return;
   }
   curSec=k;
+  localStorage.setItem('itech_curSec', k);
+  
   document.querySelectorAll('.ni').forEach(e=>e.classList.remove('active'));
   const el=document.getElementById('ni-'+k);
   if(el)el.classList.add('active');
@@ -610,9 +616,7 @@ function goSection(k){
   (SECS[k]||function(){})();
 }
 
-/* ═══════════════════════════════════════════════════════════
-   SECTIONS
-═══════════════════════════════════════════════════════════ */
+/* ── SECTIONS ── */
 const SECS={
 
 dashboard(){
@@ -721,7 +725,6 @@ dashboard(){
   document.getElementById('content').innerHTML=html;
 },
 
-/* ── CREATE USER – role-gated ─────────── */
 create_user(){
   const myRole=SESSION.user['Role'];
   const allowed=CAN_CREATE[myRole]||[];
@@ -941,7 +944,7 @@ settings(){
         ['Max Login Attempts','5'],['Session Timeout','30 minutes'],
         ['Password Min Length','8 chars'],['Require Special Char','Yes'],
         ['CAPTCHA Enabled','Yes'],['Account Lock Duration','5 minutes'],
-        ['Database Source','Internal Web Database'],
+        ['Database Source','Browser LocalStorage'],
       ].map(s=>`<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)">
         <span style="font-weight:600;font-size:13px">${s[0]}</span>
         <span style="color:var(--accent);font-weight:700;font-size:13px">${s[1]}</span>
@@ -982,9 +985,7 @@ profile(){
 
 }; // end SECS
 
-/* ═══════════════════════════════════════════════════════════
-   MODAL ACTIONS
-═══════════════════════════════════════════════════════════ */
+/* ── MODAL UTILITIES ── */
 function openM(title,body,foot=''){
   document.getElementById('m-title').textContent=title;
   document.getElementById('m-body').innerHTML=body;
@@ -993,7 +994,7 @@ function openM(title,body,foot=''){
 }
 function closeM(){document.getElementById('modal').style.display='none';}
 
-/* ─── Save New User ─────────────────────────────── */
+/* ── SAVE NEW USER WITH LOCALSTORAGE PERSISTENCE ── */
 function toggleRoleFields(){
   const r=document.getElementById('nu-role')?.value;
   const extra=document.getElementById('student-extra');
@@ -1056,12 +1057,13 @@ function saveNewUser(){
     });
   }
 
+  saveDB(); // Save database to LocalStorage permanently
   addLog(SESSION.user['Email'],SESSION.user['Role'],`Created ${role} account: ${email}`,'Success');
   alert(`✅ Account created!\nRole: ${ROLE_META[role]?.label||role}\nEmail: ${email}\nPassword: ${pass}`);
   goSection(SESSION.user['Role']==='teacher'?'students':'users');
 }
 
-/* ─── Edit User ─────────────────────────────────── */
+/* ── EDIT USER ── */
 function editUser(email){
   const u=DB.users.find(x=>x['Email']===email);
   if(!u){alert('User not found.');return;}
@@ -1083,6 +1085,7 @@ function saveEditUser(email){
   u['Department']=document.getElementById('eu-dept')?.value||u['Department'];
   const roleEl=document.getElementById('eu-role');
   if(roleEl) u['Role']=roleEl.value;
+  saveDB();
   addLog(SESSION.user['Email'],SESSION.user['Role'],'User Updated: '+email,'Success');
   closeM(); goSection('users');
 }
@@ -1091,12 +1094,13 @@ function toggleUser(email){
   if(email===SESSION.user['Email']){alert("You can't lock your own account.");return;}
   const u=DB.users.find(x=>x['Email']===email);
   u['Status']=u['Status']==='active'?'locked':'active';
+  saveDB();
   addLog(SESSION.user['Email'],SESSION.user['Role'],
     `Account ${u['Status']==='locked'?'Locked':'Unlocked'}: ${email}`,'Success');
   goSection('users');
 }
 
-/* ─── Add Mark ──────────────────────────────────── */
+/* ── MARKS ── */
 function showAddMark(){
   openM('Add Mark',`
     <div class="fg"><label>Student Name</label><input type="text" id="am-name" placeholder="Full Name"></div>
@@ -1121,11 +1125,12 @@ function saveMark(){
   const total=mid+fin;
   const grade=total>=135?'A+':total>=120?'A':total>=105?'B+':total>=90?'B':total>=75?'C':'F';
   DB.marks.push({'Student Name':name,'CourseID':crs,'Midterm/50':mid,'Final/100':fin,'Total/150':total,'Grade':grade});
+  saveDB();
   addLog(SESSION.user['Email'],SESSION.user['Role'],'Marks Added: '+name+' – '+crs,'Success');
   closeM(); goSection('marks');
 }
 
-/* ─── Mark Attendance ───────────────────────────── */
+/* ── ATTENDANCE ── */
 function showMarkAtt(){
   openM('Mark Attendance',`
     <div class="fg"><label>Student Name</label><input type="text" id="ma-name"></div>
@@ -1145,19 +1150,21 @@ function saveAtt(){
   const status=document.getElementById('ma-status')?.value;
   if(!name){alert('Enter student name.');return;}
   DB.attendance.push({'Student Name':name,'CourseID':crs,'Date':date,'Status':status,'Marked By':SESSION.user['Email']});
+  saveDB();
   closeM(); goSection('attendance');
 }
 
-/* ─── Mark Fee Paid ─────────────────────────────── */
+/* ── FEES ── */
 function markPaid(fid){
   const f=DB.fees.find(x=>x['FeeID']===fid);
   if(f){f['Status']='Paid';f['Paid Date']=new Date().toISOString().split('T')[0];
     f['Received By']=SESSION.user['Email'];}
+  saveDB();
   addLog(SESSION.user['Email'],SESSION.user['Role'],'Fee Marked Paid: '+fid,'Success');
   goSection('fees');
 }
 
-/* ─── Change Password ───────────────────────────── */
+/* ── CHANGE PASSWORD ── */
 function showChangePw(){
   openM('Change Password',`
     <div class="fg"><label>Current Password</label><input type="password" id="cp-old"></div>
@@ -1181,25 +1188,35 @@ function doChangePw(){
   if(!isStrong(np)){alert('❌ New password is too weak.');return;}
   if(np!==con){alert('❌ Passwords do not match.');return;}
   u['Password']=np;
+  saveDB();
   addLog(u['Email'],u['Role'],'Password Changed','Success');
   alert('✅ Password updated successfully!');
   closeM();
 }
 
-/* ─── Security Log helper ───────────────────────── */
+/* ── LOGS HELPER ── */
 function addLog(email,role,activity,status){
   DB.secLogs.push({
     'Email':email,'Role':role,'Activity':activity,'Status':status,
     'Timestamp':new Date().toLocaleString('en-PK')
   });
+  saveDB();
 }
 
-/* ─── Utility ───────────────────────────────────── */
 function clearErrs(){document.querySelectorAll('.err').forEach(e=>e.style.display='none');}
 function showErr(id){const e=document.getElementById(id);if(e)e.style.display='block';}
 
-/* ─── Init ──────────────────────────────────────── */
-genCap();
+/* ── AUTO-RESTORE SESSION ON REFRESH / INIT ── */
+if (SESSION) {
+  loadApp();
+} else {
+  genCap();
+}
+
+setInterval(()=>{
+  const clkEl = document.getElementById('clk');
+  if(clkEl) clkEl.textContent=new Date().toLocaleString('en-PK');
+}, 1000);
 </script>
 </body>
 </html>
