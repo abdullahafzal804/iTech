@@ -12,6 +12,7 @@
   --shadow:0 2px 14px rgba(0,0,0,.09);
 }
 *{box-sizing:border-box;margin:0;padding:0}
+html, body{width:100%;overflow-x:hidden}
 body{font-family:'Segoe UI',sans-serif;background:var(--light);color:var(--navy);min-height:100vh}
 
 /* ── AUTH ── */
@@ -51,7 +52,7 @@ body{font-family:'Segoe UI',sans-serif;background:var(--light);color:var(--navy)
   border-bottom:2px solid var(--accent);padding:2px 4px;border-radius:0}
 
 /* ── APP LAYOUT ── */
-.app{display:flex;min-height:100vh}
+.app{display:flex;min-height:100vh;width:100%}
 .sidebar{width:245px;background:var(--navy);color:#fff;
   position:fixed;height:100vh;overflow-y:auto;z-index:100;
   display:flex;flex-direction:column}
@@ -74,24 +75,24 @@ body{font-family:'Segoe UI',sans-serif;background:var(--light);color:var(--navy)
 .lout{display:flex;align-items:center;gap:8px;cursor:pointer;
   font-size:13px;color:rgba(255,255,255,.55);transition:.15s}
 .lout:hover{color:#e74c3c}
-.main{margin-left:245px;flex:1;padding:26px}
+.main{margin-left:245px;flex:1;padding:26px;width:calc(100% - 245px);box-sizing:border-box}
 .topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:24px}
 .topbar h2{font-size:21px;font-weight:700}
 .clock{font-size:13px;color:var(--muted)}
 
-/* ── CARDS ── */
+/* ── CARDS & TABLES ── */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
 .sc{background:#fff;border-radius:var(--radius);padding:18px;box-shadow:var(--shadow);
   border-left:4px solid var(--accent);position:relative;overflow:hidden}
 .sc .val{font-size:26px;font-weight:700}
 .sc .lbl{font-size:12px;color:var(--muted);margin-top:3px}
 .sc .ico{position:absolute;right:14px;top:14px;font-size:28px;opacity:.13}
-.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px}
+.card{background:#fff;border-radius:var(--radius);box-shadow:var(--shadow);margin-bottom:18px;overflow:hidden}
 .ch{padding:14px 18px;border-bottom:1px solid var(--border);
-  display:flex;align-items:center;justify-content:space-between}
+  display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px}
 .ch h3{font-size:14px;font-weight:600}
-.cb{padding:18px}
-table{width:100%;border-collapse:collapse;font-size:13px}
+.cb{padding:18px;overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px;min-width:500px}
 th{background:var(--light);padding:9px 13px;text-align:left;font-size:11px;
   font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.04em}
 td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
@@ -110,9 +111,9 @@ tr:hover td{background:#f7faff}
 
 /* ── MODAL ── */
 .mo{position:fixed;inset:0;background:rgba(0,0,0,.52);z-index:200;
-  display:flex;align-items:center;justify-content:center;padding:20px}
+  display:flex;align-items:center;justify-content:center;padding:15px}
 .mi{background:#fff;border-radius:14px;width:100%;max-width:520px;
-  box-shadow:0 24px 60px rgba(0,0,0,.22)}
+  box-shadow:0 24px 60px rgba(0,0,0,.22);max-height:90vh;overflow-y:auto}
 .mh{padding:16px 22px;border-bottom:1px solid var(--border);
   display:flex;align-items:center;justify-content:space-between}
 .mh h3{font-size:15px;font-weight:600}
@@ -123,7 +124,21 @@ tr:hover td{background:#f7faff}
 .acc-denied{text-align:center;padding:60px 20px}
 .acc-denied .ico{font-size:60px;margin-bottom:14px}
 .chip{display:inline-block;background:var(--light);border-radius:20px;padding:2px 10px;font-size:12px;margin:2px}
-@media(max-width:900px){.stats{grid-template-columns:1fr 1fr}.form-row{grid-template-columns:1fr}}
+
+/* ── RESPONSIVE MEDIA QUERIES (FIX FOR MOBILE) ── */
+@media(max-width: 900px){
+  .stats{grid-template-columns:1fr 1fr}
+  .form-row{grid-template-columns:1fr}
+}
+@media(max-width: 768px){
+  .app{flex-direction:column}
+  .sidebar{width:100%;height:auto;position:relative;min-height:initial}
+  .main{margin-left:0;width:100%;padding:14px}
+  .topbar{flex-direction:column;align-items:flex-start;gap:6px;margin-bottom:16px}
+  .auth-card{padding:24px 18px}
+  .stats{grid-template-columns:1fr}
+  .sb-bot{margin-top:10px}
+}
 </style>
 </head>
 <body>
@@ -545,7 +560,7 @@ dashboard(){
       <div class="sc" style="border-left-color:#2196f3"><span class="ico">🎒</span><div class="val">${stu}</div><div class="lbl">Students</div></div>
       <div class="sc" style="border-left-color:#e74c3c"><span class="ico">🔒</span><div class="val">${blk}</div><div class="lbl">Security Alerts</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(280px, 1fr));gap:16px">
       <div class="card"><div class="ch"><h3>Recent Security Logs</h3></div><div class="cb">
         <table><tr><th>User</th><th>Activity</th><th>Status</th></tr>
         ${DB.secLogs.slice(-8).reverse().map(l=>`<tr>
@@ -693,7 +708,7 @@ users(){
   document.getElementById('content').innerHTML=`
     <div class="card"><div class="ch"><h3>All Users</h3>
       <button class="btn btn-primary btn-sm" onclick="goSection('create_user')">+ Create Account</button></div>
-    <div class="cb" style="overflow-x:auto"><table>
+    <div class="cb"><table>
       <tr><th>ID</th><th>Name</th><th>Email / Phone</th><th>Role</th><th>Created By</th><th>Status</th><th>Actions</th></tr>
       ${DB.users.map(u=>`<tr>
         <td>${u['UserID']||u['TeacherID']||u['StudentID']||'—'}</td>
@@ -719,7 +734,7 @@ students(){
     <div class="card"><div class="ch"><h3>Students</h3>
       ${SESSION.user['Role']==='teacher'?`<button class="btn btn-primary btn-sm" onclick="goSection('create_user')">+ Register Student</button>`:''}
     </div>
-    <div class="cb" style="overflow-x:auto"><table>
+    <div class="cb"><table>
       <tr><th>ID</th><th>Name</th><th>Email / Phone</th><th>Program</th><th>Semester</th><th>CGPA</th><th>Status</th></tr>
       ${DB.students.map(s=>`<tr>
         <td>${s['StudentID']||'—'}</td><td><strong>${s['Full Name']}</strong></td>
@@ -737,7 +752,7 @@ students(){
 courses(){
   document.getElementById('content').innerHTML=`
     <div class="card"><div class="ch"><h3>Courses</h3></div>
-    <div class="cb" style="overflow-x:auto"><table>
+    <div class="cb"><table>
       <tr><th>ID</th><th>Name</th><th>Teacher</th><th>Students</th><th>Credits</th><th>Status</th></tr>
       ${DB.courses.map(c=>`<tr>
         <td><span class="chip">${c['CourseID']||'—'}</span></td>
@@ -759,7 +774,7 @@ marks(){
     <div class="card"><div class="ch"><h3>${myRole==='student'?'My Marks':'All Marks'}</h3>
       ${myRole!=='student'?`<button class="btn btn-primary btn-sm" onclick="showAddMark()">+ Add Mark</button>`:''}
     </div>
-    <div class="cb" style="overflow-x:auto"><table>
+    <div class="cb"><table>
       <tr><th>Student</th><th>Course</th><th>Midterm/50</th><th>Final/100</th><th>Total</th><th>Grade</th></tr>
       ${myMarks.map(m=>`<tr>
         <td>${m['Student Name']||'—'}</td>
@@ -805,7 +820,7 @@ attendance(){
 fees(){
   document.getElementById('content').innerHTML=`
     <div class="card"><div class="ch"><h3>Fee Records</h3></div>
-    <div class="cb" style="overflow-x:auto"><table>
+    <div class="cb"><table>
       <tr><th>ID</th><th>Student</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Action</th></tr>
       ${DB.fees.map(f=>`<tr>
         <td>${f['FeeID']||'—'}</td><td>${f['Student Name']||'—'}</td>
@@ -820,7 +835,7 @@ fees(){
 reports(){
   document.getElementById('content').innerHTML=`
     <div class="card"><div class="ch"><h3>Reports</h3></div><div class="cb">
-    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(180px, 1fr));gap:14px">
     ${[
       {i:'👥',t:'User Summary',d:'Total users by role'},
       {i:'💰',t:'Financial Report',d:'Fee collection'},
@@ -841,7 +856,7 @@ logs(){
   document.getElementById('content').innerHTML=`
     <div class="card"><div class="ch"><h3>Security Audit Log</h3>
       <span class="badge bg-info">${DB.secLogs.length} entries</span></div>
-    <div class="cb" style="overflow-x:auto"><table>
+    <div class="cb"><table>
       <tr><th>#</th><th>Email</th><th>Role</th><th>Activity</th><th>Status</th><th>Time</th></tr>
       ${[...DB.secLogs].reverse().map((l,i)=>`<tr>
         <td>${i+1}</td>
@@ -863,7 +878,7 @@ settings(){
         ['Password Min Length','8 chars'],['Require Special Char','Yes'],
         ['CAPTCHA Enabled','Yes'],['Account Lock Duration','5 minutes'],
         ['Database Source','Browser LocalStorage'],
-      ].map(s=>`<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border)">
+      ].map(s=>`<div style="display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--border);flex-wrap:wrap">
         <span style="font-weight:600;font-size:13px">${s[0]}</span>
         <span style="color:var(--accent);font-weight:700;font-size:13px">${s[1]}</span>
       </div>`).join('')}
@@ -874,7 +889,7 @@ profile(){
   const u=SESSION.user;
   document.getElementById('content').innerHTML=`
     <div class="card"><div class="ch"><h3>My Profile</h3></div><div class="cb">
-      <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px">
+      <div style="display:flex;align-items:center;gap:18px;margin-bottom:22px;flex-wrap:wrap">
         <div style="width:72px;height:72px;border-radius:50%;background:var(--accent);
           display:flex;align-items:center;justify-content:center;font-size:28px;color:#fff;font-weight:700">
           ${(u['Full Name']||'?')[0]}</div>
@@ -884,7 +899,7 @@ profile(){
           <span class="badge bg-info" style="margin-top:5px">${ROLE_META[u['Role']]?.label||u['Role']}</span>
         </div>
       </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px">
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px">
         ${[
           ['Full Name',u['Full Name']],['Email',u['Email']],
           ['Role',ROLE_META[u['Role']]?.label||u['Role']],
