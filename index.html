@@ -40,9 +40,6 @@ body{font-family:'Segoe UI',sans-serif;background:var(--light);color:var(--navy)
 .btn-success{background:var(--success);color:#fff}
 .btn-outline{background:transparent;border:1.5px solid var(--accent);color:var(--accent)}
 .btn-warn{background:var(--warn);color:#fff}
-.lk{text-align:center;margin-top:14px;font-size:13px;color:var(--muted)}
-.lk a{color:var(--accent);cursor:pointer;text-decoration:none;font-weight:600}
-.lk a:hover{text-decoration:underline}
 .lock-msg{background:#fdecea;border:1px solid #e74c3c;border-radius:8px;
   padding:12px 14px;font-size:13px;color:#922B21;margin-bottom:16px;display:none}
 
@@ -105,13 +102,9 @@ tr:hover td{background:#f7faff}
 .bg-danger{background:#f8d7da;color:#721c24}
 .bg-warn{background:#fff3cd;color:#856404}
 .bg-info{background:#cce5ff;color:#004085}
-.bg-purple{background:#e2d9f3;color:#6f42c1}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
 .alert{padding:11px 15px;border-radius:8px;font-size:13px;margin-bottom:14px}
-.al-success{background:#d4edda;color:#155724;border:1px solid #c3e6cb}
-.al-danger{background:#f8d7da;color:#721c24;border:1px solid #f5c6cb}
 .al-info{background:#cce5ff;color:#004085;border:1px solid #b8daff}
-.al-warn{background:#fff3cd;color:#856404;border:1px solid #ffc107}
 .str-bar{height:5px;border-radius:3px;background:var(--border);margin-top:6px}
 .str-fill{height:100%;border-radius:3px;width:0;transition:.3s;background:var(--danger)}
 
@@ -127,8 +120,6 @@ tr:hover td{background:#f7faff}
 .mf{padding:14px 22px;border-bottom:none;border-top:1px solid var(--border);
   display:flex;gap:10px;justify-content:flex-end}
 .xbtn{cursor:pointer;font-size:20px;color:var(--muted);border:none;background:none}
-.prog-bar{background:var(--border);border-radius:4px;height:7px;overflow:hidden}
-.prog-fill{height:100%;border-radius:4px;background:var(--accent)}
 .acc-denied{text-align:center;padding:60px 20px}
 .acc-denied .ico{font-size:60px;margin-bottom:14px}
 .chip{display:inline-block;background:var(--light);border-radius:20px;padding:2px 10px;font-size:12px;margin:2px}
@@ -150,7 +141,7 @@ tr:hover td{background:#f7faff}
 
     <div class="fg">
       <label>Email Address</label>
-      <input type="email" id="l-email" placeholder="abdullahafzalbscs14@gmail.com">
+      <input type="email" id="l-email" placeholder="itech@gmail.com">
       <div class="err" id="er-email">Enter a valid email.</div>
     </div>
     <div class="fg">
@@ -167,47 +158,6 @@ tr:hover td{background:#f7faff}
       <div class="err" id="er-cap">Wrong CAPTCHA answer.</div>
     </div>
     <button class="btn btn-primary" onclick="doLogin()">Sign In</button>
-    <div class="lk" style="margin-top:12px">
-      <a onclick="showForgot()">Forgot Password?</a>
-    </div>
-  </div>
-</div>
-
-<!-- FORGOT PASSWORD -->
-<div id="pg-forgot" style="display:none" class="auth-wrap">
-  <div class="auth-card">
-    <div class="logo-wrap">
-      <div class="logo-icon">🔑</div>
-      <h1>Reset Password</h1>
-      <p>Verify your email then set a new password</p>
-    </div>
-    <div id="fgt-s1">
-      <div class="fg">
-        <label>Your Email</label>
-        <input type="email" id="fgt-email" placeholder="you@itech.edu.pk">
-      </div>
-      <button class="btn btn-primary" onclick="fgtStep1()">Continue →</button>
-    </div>
-    <div id="fgt-s2" style="display:none">
-      <div class="alert al-info" id="fgt-hint"></div>
-      <div class="fg">
-        <label>6-Digit OTP Code</label>
-        <input type="number" id="fgt-otp" placeholder="123456">
-      </div>
-      <div class="fg">
-        <label>New Password</label>
-        <input type="password" id="fgt-np" placeholder="8+ chars, uppercase, number, symbol"
-               oninput="strCheck(this.value,'fgt-str','fgt-slbl')">
-        <div class="str-bar"><div class="str-fill" id="fgt-str"></div></div>
-        <div style="font-size:11px;color:var(--muted);margin-top:4px" id="fgt-slbl"></div>
-      </div>
-      <div class="fg">
-        <label>Confirm New Password</label>
-        <input type="password" id="fgt-cp" placeholder="Repeat">
-      </div>
-      <button class="btn btn-primary" onclick="fgtStep2()">Reset Password</button>
-    </div>
-    <div class="lk"><a onclick="showLogin()">← Back to Login</a></div>
   </div>
 </div>
 
@@ -373,7 +323,6 @@ function saveDB() {
   localStorage.setItem('itech_db', JSON.stringify(DB));
 }
 
-// Permission rules for Account Creation
 const CAN_CREATE = {
   admin:      ['teacher', 'accountant', 'student', 'admin'],
   teacher:    ['student'],
@@ -477,44 +426,6 @@ function doLogin(){
   localStorage.setItem('itech_curSec', 'dashboard');
   
   loadApp();
-}
-
-/* ── FORGOT PASSWORD ── */
-let fgtUser=null, fgtOTP='';
-function showForgot(){
-  document.getElementById('pg-login').style.display='none';
-  document.getElementById('pg-forgot').style.display='flex';
-  document.getElementById('fgt-s1').style.display='block';
-  document.getElementById('fgt-s2').style.display='none';
-}
-function showLogin(){
-  document.getElementById('pg-forgot').style.display='none';
-  document.getElementById('pg-login').style.display='flex';
-  genCap();
-}
-function fgtStep1(){
-  const email=(document.getElementById('fgt-email').value||'').trim();
-  fgtUser=findUser(email);
-  if(!fgtUser){alert('❌ No account found with this email.');return;}
-  fgtOTP=Math.floor(100000+Math.random()*900000).toString();
-  document.getElementById('fgt-hint').innerHTML=
-    `📬 OTP sent to <strong>${email}</strong><br>Demo OTP: <strong style="font-size:18px;letter-spacing:2px">${fgtOTP}</strong><br><small>(In production this would be emailed)</small>`;
-  document.getElementById('fgt-s1').style.display='none';
-  document.getElementById('fgt-s2').style.display='block';
-}
-function fgtStep2(){
-  const otp=document.getElementById('fgt-otp').value.trim();
-  const np=document.getElementById('fgt-np').value;
-  const cp=document.getElementById('fgt-cp').value;
-  if(otp!==fgtOTP){alert('❌ Wrong OTP code.');return;}
-  if(!isStrong(np)){alert('❌ Password too weak. Must have 8+ chars, uppercase, number, symbol.');return;}
-  if(np!==cp){alert('❌ Passwords do not match.');return;}
-  
-  fgtUser['Password']=np;
-  saveDB();
-  addLog(fgtUser['Email'],fgtUser['Role'],'Password Reset via OTP','Success');
-  alert('✅ Password reset! Please log in with your new password.');
-  showLogin();
 }
 
 /* ── LOGOUT ── */
@@ -669,10 +580,10 @@ dashboard(){
     <div class="card"><div class="ch"><h3>Students I Registered</h3>
       <button class="btn btn-primary btn-sm" onclick="goSection('create_user')">+ Register Student</button></div>
       <div class="cb"><table>
-        <tr><th>ID</th><th>Name</th><th>Email</th><th>Program</th><th>Status</th></tr>
+        <tr><th>ID</th><th>Name</th><th>Email / Phone</th><th>Program</th><th>Status</th></tr>
         ${myStudents.length?myStudents.map(s=>`<tr>
           <td>${s['StudentID']||'—'}</td><td><strong>${s['Full Name']}</strong></td>
-          <td>${s['Email']}</td><td>${s['Program']||'—'}</td>
+          <td>${s['Email']}<br><small style="color:var(--muted)">📞 ${s['Phone']||'—'}</small></td><td>${s['Program']||'—'}</td>
           <td><span class="badge bg-success">${s['Status']||'active'}</span></td></tr>`).join('')
           :'<tr><td colspan="5" style="text-align:center;color:var(--muted)">No students registered yet</td></tr>'}
       </table></div></div>`;
@@ -783,11 +694,14 @@ users(){
     <div class="card"><div class="ch"><h3>All Users</h3>
       <button class="btn btn-primary btn-sm" onclick="goSection('create_user')">+ Create Account</button></div>
     <div class="cb" style="overflow-x:auto"><table>
-      <tr><th>ID</th><th>Name</th><th>Email</th><th>Role</th><th>Created By</th><th>Status</th><th>Actions</th></tr>
+      <tr><th>ID</th><th>Name</th><th>Email / Phone</th><th>Role</th><th>Created By</th><th>Status</th><th>Actions</th></tr>
       ${DB.users.map(u=>`<tr>
         <td>${u['UserID']||u['TeacherID']||u['StudentID']||'—'}</td>
         <td><strong>${u['Full Name']}</strong></td>
-        <td>${u['Email']}</td>
+        <td>
+          <div>${u['Email']}</div>
+          <small style="color:var(--muted)">📞 ${u['Phone']||'—'}</small>
+        </td>
         <td><span class="badge bg-info">${ROLE_META[u['Role']]?.icon||''} ${u['Role']}</span></td>
         <td><small>${u['Created By (UserID)']||u['Created By Admin']||'—'}</small></td>
         <td><span class="badge ${u['Status']==='active'?'bg-success':'bg-danger'}">${u['Status']||'active'}</span></td>
@@ -806,10 +720,14 @@ students(){
       ${SESSION.user['Role']==='teacher'?`<button class="btn btn-primary btn-sm" onclick="goSection('create_user')">+ Register Student</button>`:''}
     </div>
     <div class="cb" style="overflow-x:auto"><table>
-      <tr><th>ID</th><th>Name</th><th>Email</th><th>Program</th><th>Semester</th><th>CGPA</th><th>Status</th></tr>
+      <tr><th>ID</th><th>Name</th><th>Email / Phone</th><th>Program</th><th>Semester</th><th>CGPA</th><th>Status</th></tr>
       ${DB.students.map(s=>`<tr>
         <td>${s['StudentID']||'—'}</td><td><strong>${s['Full Name']}</strong></td>
-        <td>${s['Email']}</td><td>${s['Program']||'—'}</td>
+        <td>
+          <div>${s['Email']}</div>
+          <small style="color:var(--muted)">📞 ${s['Phone']||'—'}</small>
+        </td>
+        <td>${s['Program']||'—'}</td>
         <td>${s['Semester']||'—'}</td><td>${s['CGPA']||'—'}</td>
         <td><span class="badge bg-success">${s['Status']||'active'}</span></td>
       </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--muted)">No students in database</td></tr>'}
@@ -1057,7 +975,7 @@ function saveNewUser(){
     });
   }
 
-  saveDB(); // Save database to LocalStorage permanently
+  saveDB();
   addLog(SESSION.user['Email'],SESSION.user['Role'],`Created ${role} account: ${email}`,'Success');
   alert(`✅ Account created!\nRole: ${ROLE_META[role]?.label||role}\nEmail: ${email}\nPassword: ${pass}`);
   goSection(SESSION.user['Role']==='teacher'?'students':'users');
